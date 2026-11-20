@@ -381,10 +381,11 @@ async function repPreparar() {
   const dias = (hasta - desde) / 86400000, info = document.getElementById("repInfo");
   if (!(dias > 0)) { info.textContent = "Revise las fechas."; return false; }
   if (dias > 90) { info.textContent = "El rango máximo es de 90 días."; return false; }
+  if (hasta > Date.now() + 31 * 86400000) { info.textContent = "Hacia adelante se puede calcular hasta 30 días: más allá, las órbitas pierden precisión."; return false; }
   const sel = document.getElementById("repSat").value;
   const lista = SATS.filter(s => s.satrec && (sel === "todos" || (sel.startsWith("g:") ? s.grupo === sel.slice(2) : s.id === sel)));
   REP.t0 = desde; REP.n = Math.ceil((hasta - desde) / REP.paso) + 1;
-  REP.dur = dias <= 15 ? 30000 : dias <= 31 ? 45000 : 60000;
+  REP.dur = dias <= 16 ? 30000 : dias <= 32 ? 45000 : 60000;   // 15 días → 30 s · 30 días → 45 s · más → 60 s
   REP.datos = []; REP.eventos = []; REP.idx = 0; REP.evIdx = -1;
   const barra = document.getElementById("progreso"); barra.style.display = "block";
   for (let k = 0; k < lista.length; k++) {
@@ -414,7 +415,7 @@ async function repPreparar() {
   REP.estela = Math.round((lista.length > 3 ? 1 : Math.min(6, Math.max(1, dias / 10))) * 86400000 / REP.paso);
   REP.zoomProy = null;
   document.getElementById("repEventos").innerHTML = REP.eventos.length ? REP.eventos.map((e, i) =>
-    `<div class="ev" id="ev${i}" data-i="${i}"><span class="pt" style="background:${e.s.color}"></span>${icoSol(e.p)} <b>${e.s.nombre}</b> · ${fmtFecha(e.p.t)}</div>`).join("")
+    `<div class="ev" id="ev${i}" data-i="${i}"><span class="pt" style="background:${e.s.color}"></span>${icoSol(e.p)} <b>${e.s.nombre}</b> · ${fmtFecha(e.p.t)}${e.p.t > Date.now() ? '<span class="fut">previsto</span>' : ""}</div>`).join("")
     : "<div class='ev'>Ningún satélite elegido pasó sobre el punto en este rango.</div>";
   document.querySelectorAll("#repEventos .ev[data-i]").forEach(el => el.onclick = () => {
     const e = REP.eventos[+el.dataset.i]; repIr(Math.round((e.p.t - REP.t0) / REP.paso)); });
@@ -428,6 +429,9 @@ function repReloj() {
   document.getElementById("repReloj").textContent = new Date(t).toLocaleString("es-BO",
     { weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   document.getElementById("repBarra").value = Math.round(1000 * REP.idx / (REP.n - 1));
+  const futuro = t > Date.now();
+  document.getElementById("repPanel").classList.toggle("futuro", futuro);
+  if (futuro) document.getElementById("repReloj").textContent += "  · pronóstico";
   let k = 0; while (k < REP.eventos.length && REP.eventos[k].p.t <= t) k++;
   if (k !== REP.evIdx) {
     REP.eventos.forEach((_, i) => document.getElementById("ev" + i)?.classList.toggle("ya", i < k));
@@ -481,6 +485,9 @@ function repCerrar() {
   document.querySelectorAll("[data-vel]").forEach(b => b.onclick = () => {
     REP.vel = +b.dataset.vel; document.querySelectorAll("[data-vel]").forEach(x => x.classList.toggle("act", x === b)); });
   document.getElementById("repBarra").oninput = e => { if (REP.activo) repIr(Math.round(+e.target.value / 1000 * (REP.n - 1))); };
+  document.querySelectorAll("[data-futuro]").forEach(b => b.onclick = () => {
+    document.getElementById("repDesde").value = iso(new Date());
+    document.getElementById("repHasta").value = iso(new Date(Date.now() + +b.dataset.futuro * 86400000)); });
   document.querySelectorAll("[data-rango]").forEach(b => b.onclick = () => {
     document.getElementById("repDesde").value = iso(new Date(Date.now() - +b.dataset.rango * 86400000));
     document.getElementById("repHasta").value = iso(new Date()); });

@@ -49,6 +49,9 @@
   #repEventos:empty { display:none; }
   #repEventos .ev { padding:4px 10px; border-bottom:1px solid #f0ebdd; color:#999; cursor:pointer; }
   #repEventos .ev.ya { color:#222; background:#fbf7ea; }
+  #repEventos .ev .fut { font-size:11.5px; color:#8a6d1f; margin-left:6px; }
+  #repPanel.futuro { background:rgba(80,62,20,.92); }
+  .rapidos { white-space:nowrap; font-size:13px; color:var(--gris); }
   .ayuda { color:var(--gris); font-size:13px; margin:6px 0 12px; }
   #resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; margin:12px 0; }
   .tarjeta { background:#fff; border-left:4px solid var(--dorado); border-radius:6px; padding:10px 12px; font-size:14px; }
@@ -104,10 +107,11 @@
     <button id="btnUbic">Mi ubicación</button>
   </div>
   <div class="rep">
-    <div class="fila"><b class="tit">Ver el recorrido de días pasados</b>
+    <div class="fila"><b class="tit">Ver el recorrido (pasado o próximo)</b>
       <label>Desde <input type="date" id="repDesde"></label>
       <label>Hasta <input type="date" id="repHasta"></label>
-      <span class="rapidos"><button data-rango="7">7 d</button><button data-rango="15">15 d</button><button data-rango="30">30 d</button><button data-rango="60">60 d</button></span>
+      <span class="rapidos">Últimos <button data-rango="7">7 d</button><button data-rango="15">15 d</button><button data-rango="30">30 d</button><button data-rango="60">60 d</button></span>
+      <span class="rapidos">Próximos <button data-futuro="7">7 d</button><button data-futuro="15">15 d</button><button data-futuro="30">30 d</button></span>
     </div>
     <div class="fila">
       <select id="repSat"></select>
@@ -125,7 +129,7 @@
   </div>
   <div id="repEventos"></div>
   <div class="ayuda">Toque el mapa o arrastre el marcador para elegir otro lugar. Elija un satélite en la tabla para ver por dónde pasa y qué franja cubre.
-  En "Ver el recorrido", el mapa dibuja la estela de las franjas que fue cubriendo cada satélite (las más recientes se ven más fuertes) y el círculo destella cada vez que uno pasa sobre el punto. Puede pausar, mover la barra o tocar una pasada de la lista para ir a ese momento. Aleje el mapa para ver más área.</div>
+  En "Ver el recorrido" puede elegir días pasados o los próximos (hasta 30 días). El mapa dibuja la estela de las franjas que fue cubriendo cada satélite (las más recientes se ven más fuertes) y el círculo destella cada vez que uno pasa sobre el punto. Puede pausar, mover la barra o tocar una pasada de la lista para ir a ese momento. Aleje el mapa para ver más área.</div>
   <div id="progreso"><div></div><span></span></div>
   <div id="resumen"></div>
   <div class="caja">
