@@ -29,7 +29,26 @@
   .barra .lugar { font-weight:600; color:var(--verde); margin-right:auto; }
   button { font:inherit; font-size:13.5px; border:1px solid var(--verde); background:#fff; color:var(--verde); padding:6px 11px; border-radius:6px; cursor:pointer; }
   button:hover { background:var(--verde); color:#fff; }
-  #mapa { height:420px; border-radius:8px; border:1px solid #cfc6ad; }
+  #mapa { height:460px; border-radius:8px; border:1px solid #cfc6ad; }
+  .mapcaja { position:relative; }
+  .rep { background:#fff; border-radius:8px; padding:8px 12px; margin-bottom:8px; font-size:14px; }
+  .rep .fila { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:3px 0; }
+  .rep .tit { color:var(--verde); margin-right:6px; }
+  .rep input[type=date], .rep select { font:inherit; font-size:14px; padding:4px 6px; border:1px solid #bdb398; border-radius:5px; }
+  .rapidos button, .vel button { padding:3px 8px; margin-left:3px; }
+  button.prim { background:var(--verde); color:#fff; font-weight:600; }
+  button.act { background:var(--dorado); border-color:var(--dorado); color:#fff; }
+  #repPanel { display:none; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:1000; width:min(430px, 78%);
+    background:rgba(31,58,45,.92); color:#fff; border-radius:8px; padding:7px 12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+  #repPanel.on { display:block; }
+  #repPanel .reloj { font-size:17px; font-weight:600; position:relative; }
+  #repPanel .reloj button { position:absolute; right:-6px; top:-3px; padding:1px 7px; background:transparent; color:#fff; border-color:#fff8; }
+  #repBarra { width:100%; accent-color:var(--dorado); margin:4px 0 0; }
+  #repConteo { font-size:13px; color:#f0e3b8; }
+  #repEventos { max-height:150px; overflow-y:auto; background:#fff; border-radius:8px; margin-top:6px; font-size:13.5px; }
+  #repEventos:empty { display:none; }
+  #repEventos .ev { padding:4px 10px; border-bottom:1px solid #f0ebdd; color:#999; cursor:pointer; }
+  #repEventos .ev.ya { color:#222; background:#fbf7ea; }
   .ayuda { color:var(--gris); font-size:13px; margin:6px 0 12px; }
   #resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; margin:12px 0; }
   .tarjeta { background:#fff; border-left:4px solid var(--dorado); border-radius:6px; padding:10px 12px; font-size:14px; }
@@ -63,7 +82,7 @@
   footer b { color:var(--verde); }
   @media (max-width:700px) {
     header h1 { font-size:18px; } header img { width:50px; }
-    #mapa { height:320px; }
+    #mapa { height:380px; } #repPanel { width:88%; } #repPanel .reloj { font-size:14.5px; }
     td.uso, th.uso { display:none; }
     #tabla td { font-size:13.5px; padding:7px 6px; }
   }
@@ -84,8 +103,29 @@
     <button id="btnCoord">Coordenadas…</button>
     <button id="btnUbic">Mi ubicación</button>
   </div>
-  <div id="mapa"></div>
-  <div class="ayuda">Toque el mapa o arrastre el marcador para elegir otro lugar. Elija un satélite en la tabla para ver por dónde pasa y qué franja cubre.</div>
+  <div class="rep">
+    <div class="fila"><b class="tit">Ver el recorrido de días pasados</b>
+      <label>Desde <input type="date" id="repDesde"></label>
+      <label>Hasta <input type="date" id="repHasta"></label>
+      <span class="rapidos"><button data-rango="7">7 d</button><button data-rango="15">15 d</button><button data-rango="30">30 d</button><button data-rango="60">60 d</button></span>
+    </div>
+    <div class="fila">
+      <select id="repSat"></select>
+      <button id="repPlay" class="prim">▶ Reproducir</button>
+      <span class="vel">Velocidad <button data-vel="0.5">½×</button><button data-vel="1" class="act">1×</button><button data-vel="2">2×</button></span>
+      <span id="repInfo" class="ayuda"></span>
+    </div>
+  </div>
+  <div class="mapcaja"><div id="mapa"></div>
+    <div id="repPanel">
+      <div class="reloj"><span id="repReloj"></span><button id="repCerrar" title="Salir de la repetición">✕</button></div>
+      <input type="range" id="repBarra" min="0" max="1000" value="0">
+      <div id="repConteo"></div>
+    </div>
+  </div>
+  <div id="repEventos"></div>
+  <div class="ayuda">Toque el mapa o arrastre el marcador para elegir otro lugar. Elija un satélite en la tabla para ver por dónde pasa y qué franja cubre.
+  En "Ver el recorrido", el mapa dibuja la estela de las franjas que fue cubriendo cada satélite (las más recientes se ven más fuertes) y el círculo destella cada vez que uno pasa sobre el punto. Puede pausar, mover la barra o tocar una pasada de la lista para ir a ese momento. Aleje el mapa para ver más área.</div>
   <div id="progreso"><div></div><span></span></div>
   <div id="resumen"></div>
   <div class="caja">

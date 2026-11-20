@@ -244,6 +244,7 @@ function moverPunto(lat, lon, nombre) {
   marca.setLatLng([lat, lon]);
   document.getElementById("coord").textContent = `${punto.nombre ? punto.nombre + " · " : ""}${lat.toFixed(4)}, ${punto.lon.toFixed(4)}`;
   history.replaceState(null, "", `#${lat.toFixed(4)},${punto.lon.toFixed(4)}`);
+  if (typeof REP !== "undefined" && REP.activo) repCerrar();
   calcular();
 }
 
@@ -268,6 +269,7 @@ function dibujarPasada(s, p) {
   mapa.fitBounds(L.latLngBounds(izq.concat(der)).pad(0.05), { maxZoom: 7 });
 }
 function detalle(id) {
+  if (REP.activo) repCerrar();
   seleccionado = id;
   document.querySelectorAll("#cuerpo tr").forEach(tr => tr.classList.toggle("sel", tr.dataset.id === id));
   const s = SATS.find(x => x.id === id), r = resultados[id], ahora = Date.now();
@@ -297,6 +299,192 @@ function posicionAhora() {
     .bindTooltip(`${s.nombre} ahora · ${Math.round(p.alt)} km de altura`);
 }
 setInterval(posicionAhora, 5000);
+
+// ---- Repetición animada de un rango de fechas -------------------------------
+// Un lienzo sobre el mapa. En cada cuadro se dibuja la estela reciente de cada satélite:
+// las franjas nuevas se ven fuertes y las viejas se desvanecen.
+const REP = { activo: false, play: false, datos: [], t0: 0, paso: 60000, idx: 0, n: 0, dur: 30000, vel: 1,
+              ultimoFrame: 0, eventos: [], evIdx: 0, lienzo: null, estela: 1440, zoomProy: null };
+
+function repLienzo() {
+  if (REP.lienzo) return;
+  const c = document.createElement("canvas");
+  c.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:450";
+  mapa.getContainer().appendChild(c); REP.lienzo = c;
+  const ajustar = () => {
+    const s = mapa.getSize(), r = window.devicePixelRatio || 1;
+    c.width = s.x * r; c.height = s.y * r; c.style.width = s.x + "px"; c.style.height = s.y + "px";
+    c.getContext("2d").setTransform(r, 0, 0, r, 0, 0); repDibujar();
+  };
+  mapa.on("resize zoomend moveend move", ajustar);
+  ajustar();
+}
+function repProyectar() {   // coordenadas en píxeles del mundo para el zoom actual (se calcula una vez por zoom)
+  const z = mapa.getZoom();
+  if (REP.zoomProy === z) return;
+  for (const d of REP.datos) {
+    d.x = new Float64Array(REP.n); d.y = new Float64Array(REP.n); d.nx = new Float64Array(REP.n); d.ny = new Float64Array(REP.n);
+    for (let i = 0; i < REP.n; i++) {
+      if (isFinite(d.lat[i])) { const p = mapa.project([d.lat[i], d.lon[i]], z); d.x[i] = p.x; d.y[i] = p.y; } else d.x[i] = NaN;
+      if (isFinite(d.nlat[i])) { const p = mapa.project([d.nlat[i], d.nlon[i]], z); d.nx[i] = p.x; d.ny[i] = p.y; } else d.nx[i] = NaN;
+    }
+  }
+  REP.zoomProy = z;
+}
+const anchoPx = km => {   // ancho de una franja en píxeles a la latitud del centro del mapa
+  const mpp = 40075016.686 * Math.cos(mapa.getCenter().lat * RAD) / (256 * 2 ** mapa.getZoom());
+  return Math.max(1.5, km * 1000 / mpp);
+};
+function repDibujar() {
+  if (!REP.lienzo) return;
+  const ctx = REP.lienzo.getContext("2d"), s = mapa.getSize();
+  ctx.clearRect(0, 0, s.x, s.y);
+  if (!REP.activo || !REP.datos.length) return;
+  repProyectar();
+  const o = mapa.getPixelOrigin(), off = mapa.layerPointToContainerPoint(L.point(0, 0));
+  const dx = off.x - o.x, dy = off.y - o.y, fin = Math.min(REP.idx, REP.n - 1), ini = Math.max(0, fin - REP.estela);
+  const ancho = s.x * 4, B = 15;
+  for (const d of REP.datos) {
+    const uno = REP.datos.length <= 3, ancha = d.s.franja > 1000;
+    const base = uno ? (ancha ? 0.22 : 0.55) : (ancha ? 0.7 : 0.35);
+    ctx.strokeStyle = d.s.color; ctx.lineWidth = ancha && !uno ? 1.6 : anchoPx(d.s.franja); ctx.lineJoin = "round";
+    for (let i0 = ini; i0 < fin; i0 += B) {
+      const edad = (fin - i0) / REP.estela;
+      ctx.globalAlpha = base * Math.max(0, 1 - edad) ** 1.5;
+      if (ctx.globalAlpha < 0.01) continue;
+      ctx.beginPath(); let pen = false;
+      for (let i = i0; i <= Math.min(fin, i0 + B); i++) {
+        const x = d.x[i] + dx, y = d.y[i] + dy;
+        if (!isFinite(x) || (pen && Math.abs(x - px) > ancho)) { pen = false; if (!isFinite(x)) continue; }
+        if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+        var px = x;
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  for (const d of REP.datos) {   // posición actual
+    const x = d.nx[fin] + dx, y = d.ny[fin] + dy;
+    if (!isFinite(x)) continue;
+    ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 2 * Math.PI); ctx.fillStyle = d.s.color; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
+    if (REP.datos.length <= 3 && x > 0 && y > 0 && x < s.x && y < s.y) {
+      ctx.font = "bold 12px Arial"; ctx.fillStyle = "#fff"; ctx.shadowColor = "#000"; ctx.shadowBlur = 3;
+      ctx.fillText(d.s.nombre, x + 9, y + 4); ctx.shadowBlur = 0;
+    }
+  }
+}
+
+async function repPreparar() {
+  const desde = new Date(document.getElementById("repDesde").value + "T00:00:00").getTime();
+  const hasta = new Date(document.getElementById("repHasta").value + "T23:59:59").getTime();
+  const dias = (hasta - desde) / 86400000, info = document.getElementById("repInfo");
+  if (!(dias > 0)) { info.textContent = "Revise las fechas."; return false; }
+  if (dias > 90) { info.textContent = "El rango máximo es de 90 días."; return false; }
+  const sel = document.getElementById("repSat").value;
+  const lista = SATS.filter(s => s.satrec && (sel === "todos" || (sel.startsWith("g:") ? s.grupo === sel.slice(2) : s.id === sel)));
+  REP.t0 = desde; REP.n = Math.ceil((hasta - desde) / REP.paso) + 1;
+  REP.dur = dias <= 15 ? 30000 : dias <= 31 ? 45000 : 60000;
+  REP.datos = []; REP.eventos = []; REP.idx = 0; REP.evIdx = -1;
+  const barra = document.getElementById("progreso"); barra.style.display = "block";
+  for (let k = 0; k < lista.length; k++) {
+    const s = lista[k];
+    barra.firstElementChild.style.width = `${Math.round(100 * k / lista.length)}%`;
+    barra.lastElementChild.textContent = `Preparando ${s.nombre}…`;
+    await new Promise(r => setTimeout(r, 0));
+    const nlat = new Float32Array(REP.n), nlon = new Float32Array(REP.n);
+    for (let i = 0; i < REP.n; i++) {
+      const p = subpunto(s.satrec, new Date(desde + i * REP.paso));
+      nlat[i] = p ? p.lat : NaN; nlon[i] = p ? p.lon : NaN;
+    }
+    let lat = nlat, lon = nlon;
+    if (s.lado) {   // radar: la franja va a la derecha de la trayectoria
+      lat = new Float32Array(REP.n); lon = new Float32Array(REP.n); const mid = (s.lado[0] + s.lado[1]) / 2;
+      for (let i = 0; i < REP.n; i++) {
+        const j = Math.min(i, REP.n - 2), h = rumbo(nlat[j], nlon[j], nlat[j + 1], nlon[j + 1]);
+        const q = destino(nlat[i], nlon[i], h + Math.PI / 2, mid); lat[i] = q[0]; lon[i] = q[1];
+      }
+    }
+    REP.datos.push({ s, lat, lon, nlat, nlon });
+    pasadas(s, punto.lat, punto.lon, desde, hasta).forEach(p => REP.eventos.push({ s, p }));
+  }
+  barra.style.display = "none";
+  REP.eventos.sort((a, b) => a.p.t - b.p.t);
+  // largo de la estela: 1 día con todos los satélites; con pocos, una décima parte del rango (entre 1 y 6 días)
+  REP.estela = Math.round((lista.length > 3 ? 1 : Math.min(6, Math.max(1, dias / 10))) * 86400000 / REP.paso);
+  REP.zoomProy = null;
+  document.getElementById("repEventos").innerHTML = REP.eventos.length ? REP.eventos.map((e, i) =>
+    `<div class="ev" id="ev${i}" data-i="${i}"><span class="pt" style="background:${e.s.color}"></span>${icoSol(e.p)} <b>${e.s.nombre}</b> · ${fmtFecha(e.p.t)}</div>`).join("")
+    : "<div class='ev'>Ningún satélite elegido pasó sobre el punto en este rango.</div>";
+  document.querySelectorAll("#repEventos .ev[data-i]").forEach(el => el.onclick = () => {
+    const e = REP.eventos[+el.dataset.i]; repIr(Math.round((e.p.t - REP.t0) / REP.paso)); });
+  info.textContent = `${lista.length} satélite(s) · ${Math.round(dias)} días · se reproduce en ${REP.dur / 1000} s`;
+  REP.preparado = sel + "|" + desde + "|" + hasta + "|" + punto.lat + "," + punto.lon;
+  return true;
+}
+const pulso = L.circleMarker([0, 0], { radius: 20, weight: 3, opacity: 0, fillOpacity: 0, interactive: false });
+function repReloj() {
+  const t = REP.t0 + Math.min(REP.idx, REP.n - 1) * REP.paso;
+  document.getElementById("repReloj").textContent = new Date(t).toLocaleString("es-BO",
+    { weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  document.getElementById("repBarra").value = Math.round(1000 * REP.idx / (REP.n - 1));
+  let k = 0; while (k < REP.eventos.length && REP.eventos[k].p.t <= t) k++;
+  if (k !== REP.evIdx) {
+    REP.eventos.forEach((_, i) => document.getElementById("ev" + i)?.classList.toggle("ya", i < k));
+    if (REP.play && k > REP.evIdx && k > 0) {   // pasada nueva sobre el punto: destello
+      const e = REP.eventos[k - 1];
+      pulso.setLatLng([punto.lat, punto.lon]).setStyle({ color: e.s.color, fillColor: e.s.color, opacity: 1, fillOpacity: 0.25 }).addTo(mapa);
+      clearTimeout(REP._t); REP._t = setTimeout(() => pulso.setStyle({ opacity: 0, fillOpacity: 0 }), 700);
+      const el = document.getElementById("ev" + (k - 1)), caja = document.getElementById("repEventos");
+      if (el) caja.scrollTop = el.offsetTop - caja.offsetTop - 40;
+    }
+    REP.evIdx = k;
+  }
+  document.getElementById("repConteo").textContent = `Pasadas sobre el punto: ${k} de ${REP.eventos.length}`;
+}
+function repCuadro(ts) {
+  if (!REP.play) return;
+  const dt = REP.ultimoFrame ? Math.min(100, ts - REP.ultimoFrame) : 16; REP.ultimoFrame = ts;
+  REP.idx = Math.min(REP.n - 1, REP.idx + Math.max(1, Math.round(dt * REP.vel / REP.dur * REP.n)));
+  repDibujar(); repReloj();
+  if (REP.idx >= REP.n - 1) { repPausa(); document.getElementById("repPlay").textContent = "↺ Repetir"; return; }
+  requestAnimationFrame(repCuadro);
+}
+function repPausa() { REP.play = false; document.getElementById("repPlay").textContent = "▶ Reproducir"; }
+function repIr(i) { REP.idx = Math.max(0, Math.min(REP.n - 1, i)); repDibujar(); repReloj(); }
+async function repPlay() {
+  if (REP.play) { repPausa(); return; }
+  repLienzo();
+  const clave = document.getElementById("repSat").value + "|" + new Date(document.getElementById("repDesde").value + "T00:00:00").getTime() + "|" +
+    new Date(document.getElementById("repHasta").value + "T23:59:59").getTime() + "|" + punto.lat + "," + punto.lon;
+  if (REP.preparado !== clave) { REP.activo = false; repDibujar(); if (!(await repPreparar())) return; }
+  REP.activo = true; capaTraza.clearLayers(); if (marcaSat) { mapa.removeLayer(marcaSat); marcaSat = null; }
+  document.getElementById("repPanel").classList.add("on");
+  if (REP.idx >= REP.n - 1) { REP.idx = 0; repDibujar(); }
+  REP.play = true; REP.ultimoFrame = 0; document.getElementById("repPlay").textContent = "⏸ Pausa";
+  requestAnimationFrame(repCuadro);
+}
+function repCerrar() {
+  repPausa(); REP.activo = false; REP.preparado = null; repDibujar();
+  document.getElementById("repPanel").classList.remove("on"); document.getElementById("repInfo").textContent = "";
+}
+(function repIniciar() {
+  const hoy = new Date(), hace = new Date(Date.now() - 30 * 86400000), iso = d => d.toLocaleDateString("en-CA");
+  document.getElementById("repDesde").value = iso(hace); document.getElementById("repHasta").value = iso(hoy);
+  const sel = document.getElementById("repSat");
+  sel.innerHTML = `<option value="todos">Todos los satélites</option>` +
+    [...new Set(SATS.map(s => s.grupo))].map(g => `<option value="g:${g}">${g} (todos)</option>`).join("") +
+    SATS.map(s => `<option value="${s.id}">${s.nombre}</option>`).join("");
+  sel.value = "g:Landsat";
+  document.getElementById("repPlay").onclick = repPlay;
+  document.getElementById("repCerrar").onclick = repCerrar;
+  document.querySelectorAll("[data-vel]").forEach(b => b.onclick = () => {
+    REP.vel = +b.dataset.vel; document.querySelectorAll("[data-vel]").forEach(x => x.classList.toggle("act", x === b)); });
+  document.getElementById("repBarra").oninput = e => { if (REP.activo) repIr(Math.round(+e.target.value / 1000 * (REP.n - 1))); };
+  document.querySelectorAll("[data-rango]").forEach(b => b.onclick = () => {
+    document.getElementById("repDesde").value = iso(new Date(Date.now() - +b.dataset.rango * 86400000));
+    document.getElementById("repHasta").value = iso(new Date()); });
+})();
 
 // ---- Inicio ----------------------------------------------------------------
 document.getElementById("btnUbic").onclick = () => navigator.geolocation && navigator.geolocation.getCurrentPosition(
