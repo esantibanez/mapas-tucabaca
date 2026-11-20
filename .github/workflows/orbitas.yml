@@ -17,7 +17,8 @@ jobs:
           base="https://celestrak.org/NORAD/elements/gp.php?FORMAT=tle&GROUP="
           curl -fsSL --retry 3 "${base}resource" -o /tmp/a.txt
           curl -fsSL --retry 3 "${base}weather"  -o /tmp/b.txt
-          cat /tmp/a.txt /tmp/b.txt > satelites/tles.txt
+          curl -fsSL --retry 3 "https://celestrak.org/NORAD/elements/gp.php?FORMAT=tle&NAME=SENTINEL-1" -o /tmp/c.txt || true
+          cat /tmp/a.txt /tmp/b.txt /tmp/c.txt > satelites/tles.txt
           grep -c "^1 " satelites/tles.txt
       - name: Guardar cambios
         run: |
