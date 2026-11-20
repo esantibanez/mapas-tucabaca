@@ -65,10 +65,12 @@
   .leyenda { margin:8px 0 2px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; } .leyenda small { color:var(--gris); }
   .humedad { margin-top:8px; padding-top:8px; border-top:1px dashed #d9cfb2; font-size:13.5px; } .humedad b { color:var(--verde); }
   .hum { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:4px; align-items:center; }
-  .chip { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; font-family:Arial, sans-serif; border:1px solid transparent; }
+  .chip { display:inline-block; line-height:1.35; padding:1px 8px; border-radius:10px; font-size:12px; font-family:Arial, sans-serif; border:1px solid transparent; }
   .e-bien { background:#3C8D40; color:#fff; } .e-posible { background:#E8C25A; color:#3b2f0b; } .e-no { background:#A0522D; color:#fff; }
   .e-regar { background:#2a6f97; color:#fff; } .e-ligero { background:#9cc8e2; color:#0f3550; } .e-fuera { background:#e4e0d4; color:#555; }
   .e-na { background:#f1eee6; color:#888; border-color:#ddd; } .e-sd { background:#f6f4ee; color:#999; border-color:#e5e1d6; }
+  .chip.trad, .gtrad { background:#efe6f5; color:#5a3f73; } .gtrad { font:10.5px Arial, sans-serif; border-radius:8px; padding:0 4px; margin-bottom:3px; align-self:flex-start; } .gesp { flex:1; }
+  .chk { font-size:13.5px; } .chk input { vertical-align:middle; }
   .cert { font-size:11px; color:var(--gris); margin-top:2px; }
   .grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
   .gcab { text-align:center; font-size:13px; color:var(--gris); padding:4px 0; }
@@ -80,7 +82,7 @@
   .gdia.hoy { border:2px solid var(--verde); }
   .glun { position:absolute; top:6px; right:6px; } .gcli { font-size:15px; } .gcli span { font-size:11.5px; color:var(--gris); margin-left:2px; }
   .gico { position:absolute; top:26px; right:5px; font-size:11px; } .gfer { font-size:10.5px; color:var(--verde); font-weight:bold; line-height:1.15; }
-  .grec { margin:auto -5px 0; text-align:center; font:11px Arial, sans-serif; padding:2px 0; border-radius:0 0 5px 5px; }
+  .grec { margin:0 -5px 0; text-align:center; font:11px Arial, sans-serif; padding:2px 0; border-radius:0 0 5px 5px; }
   .ficha { display:none; position:fixed; inset:0; background:rgba(20,30,25,.55); z-index:50; align-items:center; justify-content:center; padding:12px; }
   .ficha.on { display:flex; }
   .fcont { background:var(--papel); max-width:620px; width:100%; max-height:92vh; overflow-y:auto; border-radius:8px; padding:16px 18px; border-top:5px solid var(--dorado); }
@@ -99,7 +101,7 @@
   #vista table tr[data-d] { cursor:pointer; }
   @media (max-width:720px) {
     .gdia { min-height:78px; padding:2px 3px 0; } .gnum { font-size:15px; } .gcli span, .gfer, .gico { display:none; } .glun svg { width:12px; height:12px; }
-    .grec { font-size:9.5px; margin:auto -3px 0; } .vistas { margin-left:0; }
+    .grec { font-size:9.5px; margin:0 -3px 0; } .gtrad span { display:none; } .vistas { margin-left:0; }
     header h1 { font-size:23px; }
     #hoy { flex-direction:column; } .hfecha { border-right:0; border-bottom:1px solid #e3d9bd; padding:0 0 8px; }
     th.cli, td.cli { display:none; }
@@ -142,10 +144,11 @@
         <option value="sandia">Sandía</option><option value="melon">Melón</option><option value="papaya">Papaya</option>
         <option value="platano">Plátano</option><option value="citricos">Cítricos</option></select></label>
       <label>Actividad <select id="actividad"><option value="siembra">Siembra</option><option value="poda">Poda</option><option value="riego">Riego</option></select></label>
+      <label class="chk"><input type="checkbox" id="verLuna" checked> Mostrar la tradición lunar</label>
       <span class="vistas"><button id="vCal" class="act">📅 Calendario</button><button id="vLista">📋 Lista</button></span>
     </div>
     <div class="leyenda"><span class="chip e-bien">Buen momento</span><span class="chip e-posible">Posible</span><span class="chip e-no">No conviene</span>
-      <span class="chip e-regar">Regar</span><span class="chip e-fuera">Fuera de época / no hace falta</span><span class="chip e-na">No aplica</span>
+      <span class="chip e-regar">Regar</span><span class="chip e-fuera">Fuera de época / no hace falta</span><span class="chip e-na">No aplica</span><span class="chip trad">🌙 luna favorable (tradición)</span>
       <small>Toque un día para ver el detalle y la certeza de la recomendación.</small></div>
     <div id="humedad" class="humedad"></div>
   </div>

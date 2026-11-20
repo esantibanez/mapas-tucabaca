@@ -222,7 +222,7 @@ function datosDia(a, m, d, moviles) {
   return { f, d, sol, lunaT, il, cre: il.phase < 0.5, durMin, santo: SANTORAL[m][d - 1], marcas: marcasDelDia(a, m, d, moviles) };
 }
 // ---- Huerta y chaco: cultivo y actividad elegidos ---------------------------------
-let cultivo = "maiz", actividad = "siembra", vista = "cal", diasMes = [];
+let cultivo = "maiz", actividad = "siembra", vista = "cal", diasMes = [], verLuna = true;
 const isoDe = (a, m, d) => `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 const hoyISO = () => fmt(new Date(), { year: "numeric", month: "2-digit", day: "2-digit" }).split("/").reverse().join("-");
 const NIV = ["Baja", "Media", "Alta"];
@@ -268,6 +268,8 @@ function renderCal() {
       <div class="gcli">${ci}${x.cl ? `<span>${Math.round(x.cl.max)}°</span>` : ""}</div>
       <div class="gico">${ico}</div>
       ${x.fer ? `<div class="gfer">${x.marcas.find(z => z.tipo === "feriado").txt}</div>` : ""}
+      <div class="gesp"></div>
+      ${verLuna && x.rec.tradicion && x.rec.tradicion.fav ? `<div class="gtrad" title="Día favorable según la tradición lunar">🌙 <span>luna favorable</span></div>` : ""}
       <div class="grec e-${x.rec.estado}">${x.rec.corto}</div></div>`;
   }
   document.getElementById("vista").innerHTML = h + "</div>";
@@ -286,7 +288,7 @@ function renderLista() {
         <div class="lt">↑${x.lunaT.rise ? hora(x.lunaT.rise) : " —"} ↓${x.lunaT.set ? hora(x.lunaT.set) : " —"}</div></td>
       <td class="cli">${cl ? `<span class="ci" title="${(CLIMA[cl.cod] || ["", ""])[1]}">${(CLIMA[cl.cod] || ["·"])[0]}</span>
         <div>${Math.round(cl.max)}° / ${Math.round(cl.min)}°</div><div class="ll">${cl.lluvia >= 0.1 ? `💧 ${cl.lluvia.toFixed(cl.lluvia < 10 ? 1 : 0)} mm` : ""}</div>` : ""}</td>
-      <td><span class="chip e-${x.rec.estado}">${x.rec.corto}</span>${x.rec.certeza ? `<div class="cert">Certeza ${NIV[x.rec.certeza.n].toLowerCase()}</div>` : ""}</td>
+      <td><span class="chip e-${x.rec.estado}">${x.rec.corto}</span>${verLuna && x.rec.tradicion && x.rec.tradicion.fav ? ` <span class="chip trad">🌙 luna favorable</span>` : ""}${x.rec.certeza ? `<div class="cert">Certeza ${NIV[x.rec.certeza.n].toLowerCase()}</div>` : ""}</td>
       <td class="sat">${x.pas.map(p => `<div><b>${p.s.nombre}</b> ${hora(p.t)}</div>`).join("")}</td></tr>`;
   }
   document.getElementById("vista").innerHTML = html + "</tbody></table>";
@@ -367,6 +369,7 @@ document.getElementById("lugar").onchange = e => { lugar = LUGARES[e.target.valu
 document.getElementById("imprimir").onclick = () => window.print();
 document.getElementById("cultivo").onchange = e => { cultivo = e.target.value; render(); };
 document.getElementById("actividad").onchange = e => { actividad = e.target.value; render(); };
+document.getElementById("verLuna").onchange = e => { verLuna = e.target.checked; render(); };
 document.getElementById("vCal").onclick = () => { vista = "cal"; render(); };
 document.getElementById("vLista").onclick = () => { vista = "lista"; render(); };
 document.getElementById("ficha").onclick = e => { if (e.target.id === "ficha") cerrarFicha(); };
