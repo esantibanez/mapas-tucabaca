@@ -17,12 +17,12 @@ const SATS = [
     uso: "Desmontes recientes, quemas, agua (máximo detalle gratuito)", datos: "Horas después (Copernicus)" },
   { id: "S2C", nombre: "Sentinel-2C", re: /^SENTINEL-2C\b/, grupo: "Sentinel-2", color: "#42A5F5", franja: 290, dia: true,  res: "10 m",
     uso: "Desmontes recientes, quemas, agua (máximo detalle gratuito)", datos: "Horas después (Copernicus)" },
-  { id: "S1A", nombre: "Sentinel-1A", re: /^SENTINEL-1A\b/, grupo: "Sentinel-1", color: "#6A1B9A", franja: 250, dia: false, lado: [230, 490], res: "10–20 m (radar)",
-    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones", datos: "Horas después (Copernicus)" },
-  { id: "S1C", nombre: "Sentinel-1C", re: /^SENTINEL-1C\b/, grupo: "Sentinel-1", color: "#8E24AA", franja: 250, dia: false, lado: [230, 490], res: "10–20 m (radar)",
-    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones", datos: "Horas después (Copernicus)" },
-  { id: "S1D", nombre: "Sentinel-1D", re: /^SENTINEL-1D\b/, grupo: "Sentinel-1", color: "#AB47BC", franja: 250, dia: false, lado: [230, 490], res: "10–20 m (radar)",
-    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones", datos: "Horas después (Copernicus)" },
+  { id: "S1A", nombre: "Sentinel-1A", re: /^SENTINEL-1A\b/, grupo: "Sentinel-1", color: "#6A1B9A", franja: 250, dia: false, lado: [345, 615], res: "10–20 m (radar)",
+    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones. No siempre toma imagen en cada pasada", datos: "Horas después (Copernicus)" },
+  { id: "S1C", nombre: "Sentinel-1C", re: /^SENTINEL-1C\b/, grupo: "Sentinel-1", color: "#8E24AA", franja: 250, dia: false, lado: [345, 615], res: "10–20 m (radar)",
+    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones. No siempre toma imagen en cada pasada", datos: "Horas después (Copernicus)" },
+  { id: "S1D", nombre: "Sentinel-1D", re: /^SENTINEL-1D\b/, grupo: "Sentinel-1", color: "#AB47BC", franja: 250, dia: false, lado: [345, 615], res: "10–20 m (radar)",
+    uso: "Radar: ve a través de nubes y humo. Desmontes, inundaciones. No siempre toma imagen en cada pasada", datos: "Horas después (Copernicus)" },
   { id: "S3A", nombre: "Sentinel-3A", re: /^SENTINEL-3A\b/, grupo: "Sentinel-3", color: "#00838F", franja: 1270, dia: false, res: "300 m – 1 km",
     uso: "Agua (color y temperatura), focos de calor nocturnos", datos: "Horas después (Copernicus)" },
   { id: "S3B", nombre: "Sentinel-3B", re: /^SENTINEL-3B\b/, grupo: "Sentinel-3", color: "#26A69A", franja: 1270, dia: false, res: "300 m – 1 km",
@@ -189,7 +189,9 @@ function tabla() {
     if (s.grupo !== grupoAnt) {
       grupoAnt = s.grupo;
       const g = document.createElement("tr"); g.className = "grupo";
-      g.innerHTML = `<td colspan="5">${s.grupo} · ${s.res}${s.dia ? " · solo de día" : ""}</td>`; tb.appendChild(g);
+      const juntas = SATS.filter(x => x.grupo === s.grupo && resultados[x.id]).flatMap(x => resultados[x.id].todas).sort((a, b) => a.t - b.t);
+      const n = SATS.filter(x => x.grupo === s.grupo && resultados[x.id]).length;
+      g.innerHTML = `<td colspan="5">${s.grupo} · ${s.res}${s.dia ? " · solo de día" : ""}${n > 1 ? ` · los ${n} juntos: ${cadaCuanto(juntas)}` : ""}</td>`; tb.appendChild(g);
     }
     const tr = document.createElement("tr"); tr.dataset.id = s.id;
     if (!r) {
