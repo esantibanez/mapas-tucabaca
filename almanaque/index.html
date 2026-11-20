@@ -58,7 +58,48 @@
   footer { text-align:center; font-size:12.5px; color:var(--gris); padding:16px; }
   footer b { color:var(--verde); }
   footer a, .metodo a { color:var(--verde); }
+
+  .huerta { background:var(--papel); border:1px solid #d9cfb2; border-radius:6px; padding:10px 12px; margin:0 0 12px; }
+  .hsel { display:flex; flex-wrap:wrap; gap:10px; align-items:center; } .hsel b { color:var(--verde); font-size:16px; }
+  .vistas { margin-left:auto; } .vistas button { margin-left:4px; } button.act { background:var(--verde); color:#fff; }
+  .leyenda { margin:8px 0 2px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; } .leyenda small { color:var(--gris); }
+  .humedad { margin-top:8px; padding-top:8px; border-top:1px dashed #d9cfb2; font-size:13.5px; } .humedad b { color:var(--verde); }
+  .hum { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:4px; align-items:center; }
+  .chip { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; font-family:Arial, sans-serif; border:1px solid transparent; }
+  .e-bien { background:#3C8D40; color:#fff; } .e-posible { background:#E8C25A; color:#3b2f0b; } .e-no { background:#A0522D; color:#fff; }
+  .e-regar { background:#2a6f97; color:#fff; } .e-ligero { background:#9cc8e2; color:#0f3550; } .e-fuera { background:#e4e0d4; color:#555; }
+  .e-na { background:#f1eee6; color:#888; border-color:#ddd; } .e-sd { background:#f6f4ee; color:#999; border-color:#e5e1d6; }
+  .cert { font-size:11px; color:var(--gris); margin-top:2px; }
+  .grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+  .gcab { text-align:center; font-size:13px; color:var(--gris); padding:4px 0; }
+  .gdia { background:var(--papel); border:1px solid #e0d7bd; border-radius:6px; min-height:104px; padding:4px 5px 0; position:relative; cursor:pointer;
+    display:flex; flex-direction:column; transition:box-shadow .15s; }
+  .gdia:hover, .gdia:focus { box-shadow:0 0 0 2px var(--dorado); outline:none; }
+  .gnum { font-size:20px; color:var(--verde); } .gdia.dom .gnum { color:var(--dorado); font-weight:bold; }
+  .gdia.fer { background:#FBF3DC; } .gdia.fer .gnum { font-weight:bold; }
+  .gdia.hoy { border:2px solid var(--verde); }
+  .glun { position:absolute; top:6px; right:6px; } .gcli { font-size:15px; } .gcli span { font-size:11.5px; color:var(--gris); margin-left:2px; }
+  .gico { position:absolute; top:26px; right:5px; font-size:11px; } .gfer { font-size:10.5px; color:var(--verde); font-weight:bold; line-height:1.15; }
+  .grec { margin:auto -5px 0; text-align:center; font:11px Arial, sans-serif; padding:2px 0; border-radius:0 0 5px 5px; }
+  .ficha { display:none; position:fixed; inset:0; background:rgba(20,30,25,.55); z-index:50; align-items:center; justify-content:center; padding:12px; }
+  .ficha.on { display:flex; }
+  .fcont { background:var(--papel); max-width:620px; width:100%; max-height:92vh; overflow-y:auto; border-radius:8px; padding:16px 18px; border-top:5px solid var(--dorado); }
+  .fcab { display:flex; justify-content:space-between; align-items:flex-start; } .fn { font-size:22px; color:var(--verde); }
+  .cerrar { border:0; font-size:20px; background:transparent; color:var(--gris); }
+  .rec { margin:10px 0; border-radius:6px; padding:10px 12px; background:#fff !important; color:var(--tinta) !important; border-left:6px solid; }
+  .rec.e-bien { border-color:#3C8D40; } .rec.e-posible { border-color:#E8C25A; } .rec.e-no { border-color:#A0522D; } .rec.e-regar { border-color:#2a6f97; }
+  .rec.e-ligero { border-color:#9cc8e2; } .rec.e-fuera, .rec.e-na, .rec.e-sd { border-color:#ccc; }
+  .rtit { font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--gris); } .rest { font-size:17px; color:var(--verde); margin:2px 0 4px; }
+  .rec ul { margin:6px 0; padding-left:18px; font-size:13.5px; } .rec li.nota { color:#555; font-style:italic; } .rec li small { color:var(--gris); }
+  .nivel { font:bold 11.5px Arial, sans-serif; padding:1px 7px; border-radius:9px; } .n2 { background:#3C8D40; color:#fff; } .n1 { background:#E8C25A; color:#3b2f0b; }
+  .n0 { background:#ddd; color:#444; } .ntrad { background:#efe6f5; color:#5a3f73; } .rcert small { color:var(--gris); }
+  .trad { margin-top:8px; font-size:13px; background:#f8f4fb; border-radius:5px; padding:6px 8px; }
+  .otras { margin-top:8px; font-size:13px; border-top:1px dashed #ddd; padding-top:6px; } .otra { margin:3px 0; }
+  .fbloque { font-size:13.5px; margin:6px 0; } .fbloque svg { vertical-align:middle; }
+  #vista table tr[data-d] { cursor:pointer; }
   @media (max-width:720px) {
+    .gdia { min-height:78px; padding:2px 3px 0; } .gnum { font-size:15px; } .gcli span, .gfer, .gico { display:none; } .glun svg { width:12px; height:12px; }
+    .grec { font-size:9.5px; margin:auto -3px 0; } .vistas { margin-left:0; }
     header h1 { font-size:23px; }
     #hoy { flex-direction:column; } .hfecha { border-right:0; border-bottom:1px solid #e3d9bd; padding:0 0 8px; }
     th.cli, td.cli { display:none; }
@@ -67,7 +108,7 @@
   }
   @media print {
     header { background:none; color:#000; border-bottom:2px solid #000; padding:4px; } header img { width:44px; } header .sub { color:#333; }
-    #hoy, .barra button, .barra select, .derecha, .metodo, #notaSat:empty { display:none; }
+    #hoy, .barra button, .barra select, .derecha, .metodo, #notaSat:empty, .hsel select, .vistas, .humedad, .ficha { display:none !important; }
     body { background:#fff; font-size:11px; } main { padding:0; max-width:none; }
     th { background:#eee; color:#000; } td { font-size:10.5px; padding:3px; } td.num { font-size:15px; }
     tr { page-break-inside:avoid; } tr.hoy td { background:none !important; }
@@ -94,10 +135,22 @@
     </div>
   </div>
   <div id="fases"></div>
-  <table>
-    <thead><tr><th>Día</th><th>Santoral y fechas</th><th>☀️ Sol<br><small>sale / se pone</small></th><th>🌙 Luna</th><th class="cli">Clima</th><th class="sat">🛰️ Landsat / Sentinel-2</th></tr></thead>
-    <tbody id="mes"></tbody>
-  </table>
+  <div class="huerta">
+    <div class="hsel"><b>🌱 Huerta y chaco</b>
+      <label>Cultivo <select id="cultivo">
+        <option value="yuca">Yuca</option><option value="maiz" selected>Maíz</option><option value="frejol">Frejol</option>
+        <option value="sandia">Sandía</option><option value="melon">Melón</option><option value="papaya">Papaya</option>
+        <option value="platano">Plátano</option><option value="citricos">Cítricos</option></select></label>
+      <label>Actividad <select id="actividad"><option value="siembra">Siembra</option><option value="poda">Poda</option><option value="riego">Riego</option></select></label>
+      <span class="vistas"><button id="vCal" class="act">📅 Calendario</button><button id="vLista">📋 Lista</button></span>
+    </div>
+    <div class="leyenda"><span class="chip e-bien">Buen momento</span><span class="chip e-posible">Posible</span><span class="chip e-no">No conviene</span>
+      <span class="chip e-regar">Regar</span><span class="chip e-fuera">Fuera de época / no hace falta</span><span class="chip e-na">No aplica</span>
+      <small>Toque un día para ver el detalle y la certeza de la recomendación.</small></div>
+    <div id="humedad" class="humedad"></div>
+  </div>
+  <div id="vista"></div>
+  <div id="ficha" class="ficha" role="dialog" aria-modal="true"><div id="fichaCont" class="fcont"></div></div>
   <div class="nota" id="notaSat"></div>
   <div class="metodo">
     <h4>Sobre este almanaque</h4>
@@ -106,6 +159,10 @@
     <b>Clima:</b> pronóstico de los próximos 16 días de <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>,
     que se actualiza varias veces al día; los primeros días son los más confiables. <b>Feriados:</b> nacionales según el DS 2750 y los
     traslados oficiales conocidos (DS 5521 para 2026); cada año el Gobierno puede trasladar o agregar feriados. <b>Santoral:</b> santo o fiesta principal del calendario católico.
+    <b>Huerta y chaco:</b> la recomendación combina tres fuentes, cada una con su nivel de certeza:
+    (1) un calendario general de cultivos para la Chiquitanía (certeza media: conviene confirmarlo con productores de la zona);
+    (2) la lluvia, la evaporación y la humedad del suelo del último mes y del pronóstico de 16 días (certeza alta para días ya ocurridos y los próximos 3, media hasta una semana, baja después);
+    (3) la tradición de sembrar y podar según la luna, que se muestra aparte porque no tiene respaldo científico. Es una orientación: la decisión final es de quien trabaja la tierra.
     <b>Satélites:</b> pasadas diurnas de Landsat 8 y 9 y Sentinel-2 sobre el lugar, calculadas con sus órbitas oficiales;
     que pase el satélite no garantiza una imagen sin nubes. Más detalle en <a href="../satelites/">¿Cuándo pasa el satélite?</a>
   </div>
@@ -115,6 +172,7 @@ Fuentes: algoritmos de J. Meeus · SunCalc · Open-Meteo · NORAD/CelesTrak · D
 <script src="lib/suncalc.js"></script>
 <script src="../satelites/lib/satellite.min.js"></script>
 <script src="santoral.js"></script>
+<script src="siembra.js"></script>
 <script src="almanaque.js"></script>
 <script data-goatcounter="https://tucabaca.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>

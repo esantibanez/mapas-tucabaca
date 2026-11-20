@@ -151,12 +151,14 @@ async function cargarClima() {
   clima = {}; climaLugar = lugar.nombre;
   try {
     const u = `https://api.open-meteo.com/v1/forecast?latitude=${lugar.lat}&longitude=${lugar.lon}` +
-      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
-      `&timezone=${encodeURIComponent(ZONA)}&forecast_days=16`;
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,et0_fao_evapotranspiration` +
+      `&hourly=soil_moisture_9_to_27cm&timezone=${encodeURIComponent(ZONA)}&past_days=31&forecast_days=16`;
     const r = await fetch(u); if (!r.ok) return;
-    const j = await r.json(), D = j.daily;
+    const j = await r.json(), D = j.daily, H = j.hourly || {}, sm = {};
+    (H.time || []).forEach((t, i) => { const v = H.soil_moisture_9_to_27cm[i]; if (v == null) return; const k = t.slice(0, 10); (sm[k] = sm[k] || []).push(v); });
     D.time.forEach((t, i) => { clima[t] = { cod: D.weather_code[i], max: D.temperature_2m_max[i], min: D.temperature_2m_min[i],
-      lluvia: D.precipitation_sum[i], prob: D.precipitation_probability_max[i], viento: D.wind_speed_10m_max[i] }; });
+      lluvia: D.precipitation_sum[i], prob: D.precipitation_probability_max[i], viento: D.wind_speed_10m_max[i], et0: D.et0_fao_evapotranspiration[i],
+      suelo: sm[t] ? sm[t].reduce((x, y) => x + y, 0) / sm[t].length : null }; });
   } catch (e) { climaLugar = null; }
 }
 
@@ -219,39 +221,118 @@ function datosDia(a, m, d, moviles) {
   const durMin = (sol.sunset - sol.sunrise) / 60000;
   return { f, d, sol, lunaT, il, cre: il.phase < 0.5, durMin, santo: SANTORAL[m][d - 1], marcas: marcasDelDia(a, m, d, moviles) };
 }
+// ---- Huerta y chaco: cultivo y actividad elegidos ---------------------------------
+let cultivo = "maiz", actividad = "siembra", vista = "cal", diasMes = [];
+const isoDe = (a, m, d) => `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+const hoyISO = () => fmt(new Date(), { year: "numeric", month: "2-digit", day: "2-digit" }).split("/").reverse().join("-");
+const NIV = ["Baja", "Media", "Alta"];
+const marcaHTML = z => `<div class="m ${z.tipo}">${z.tipo === "feriado" ? "Feriado · " : z.tipo === "ambiental" ? "🌱 " : ""}${z.txt}</div>`;
+
 function render() {
-  const cont = document.getElementById("mes"), nd = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
+  const nd = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
   const moviles = fechasMoviles(anio), fases = fasesDelMes(anio, mes), pas = pasadasMes(anio, mes);
   const est = estaciones(anio).filter(e => claveDia(e.t).endsWith(`/${String(mes + 1).padStart(2, "0")}/${anio}`));
   document.getElementById("titMes").textContent = `${NOMBRE_MES[mes]} ${anio}`;
-  // fases del mes
   document.getElementById("fases").innerHTML = fases.map(x => `<div class="fase">${lunaSVG([0, 0.5, 1, 0.5][x.tipo], x.tipo < 2, 30)}
       <div><b>${FASES[x.tipo][0]}</b><br>${fmt(x.t, { weekday: "short", day: "numeric" })} · ${hora(x.t)} h</div></div>`).join("") +
     est.map(e => `<div class="fase est"><span class="ico">${e.nombre.includes("Solsticio") ? "☀️" : "🌗"}</span>
       <div><b>${e.nombre.split(":")[0]}</b><br>${fmt(e.t, { weekday: "short", day: "numeric" })} · ${hora(e.t)} h<br><small>${e.nombre.split(": ")[1]}</small></div></div>`).join("");
   const faseDia = {}; fases.forEach(x => { faseDia[claveDia(x.t)] = x; });
-  const hoyK = claveDia(new Date());
-  let html = "";
+  const hk = claveDia(new Date()), hI = hoyISO();
+  diasMes = [];
   for (let d = 1; d <= nd; d++) {
-    const x = datosDia(anio, mes, d, moviles), k = claveDia(x.f);
-    const esDom = fmt(x.f, { weekday: "long" }) === "domingo", fer = x.marcas.some(z => z.tipo === "feriado");
-    const iso = `${anio}-${String(mes + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`, cl = clima[iso], fz = faseDia[k];
-    const marcas = x.marcas.map(z => `<div class="m ${z.tipo}">${z.tipo === "feriado" ? "Feriado · " : z.tipo === "ambiental" ? "🌱 " : ""}${z.txt}</div>`).join("");
-    html += `<tr class="${esDom ? "dom" : ""} ${fer ? "fer" : ""} ${k === hoyK ? "hoy" : ""}" id="d${d}">
-      <td class="num">${d}<div class="dsem">${fmt(x.f, { weekday: "short" }).replace(".", "")}</div></td>
-      <td class="santo">${x.santo}${marcas}</td>
+    const x = datosDia(anio, mes, d, moviles), k = claveDia(x.f), iso = isoDe(anio, mes, d);
+    x.iso = iso; x.k = k; x.hoy = k === hk; x.cl = clima[iso]; x.fz = faseDia[k]; x.pas = pas[k] || [];
+    x.dom = fmt(x.f, { weekday: "long" }) === "domingo"; x.fer = x.marcas.some(z => z.tipo === "feriado");
+    x.rec = recomendar(cultivo, actividad, iso, clima, hI, { cre: x.cre, frac: x.il.fraction });
+    diasMes.push(x);
+  }
+  vista === "cal" ? renderCal() : renderLista();
+  document.getElementById("vCal").classList.toggle("act", vista === "cal");
+  document.getElementById("vLista").classList.toggle("act", vista === "lista");
+  const fueraOrb = diaBo(anio, mes, 1, 0) > Date.now() + MAX_DIAS_ORBITA * 86400000 || diaBo(anio, mes + 1, 1, 0) < Date.now() - MAX_DIAS_ORBITA * 86400000;
+  document.getElementById("notaSat").textContent = !orbitasListas ? "Satélites: no se pudieron cargar las órbitas." :
+    fueraOrb ? `Satélites: se muestran solo hasta ${MAX_DIAS_ORBITA} días antes o después de hoy (más allá, el cálculo pierde precisión).` : "";
+  renderHoy(); renderHumedad();
+}
+function renderCal() {
+  const cab = ["do.", "lu.", "ma.", "mi.", "ju.", "vi.", "sá."];
+  const primero = new Date(Date.UTC(anio, mes, 1)).getUTCDay();
+  let h = `<div class="grid">${cab.map(c => `<div class="gcab">${c}</div>`).join("")}`;
+  for (let i = 0; i < primero; i++) h += `<div class="gvacio"></div>`;
+  for (const x of diasMes) {
+    const ci = x.cl ? (CLIMA[x.cl.cod] || ["", ""])[0] : "";
+    const ico = (x.marcas.some(z => z.tipo === "ambiental") ? "🌱" : "") + (x.pas.length ? "🛰️" : "");
+    h += `<div class="gdia ${x.dom ? "dom" : ""} ${x.fer ? "fer" : ""} ${x.hoy ? "hoy" : ""}" data-d="${x.d}" tabindex="0" role="button" aria-label="${x.d} de ${NOMBRE_MES[mes]}">
+      <div class="gnum">${x.d}</div><div class="glun">${lunaSVG(x.il.fraction, x.cre, 16)}</div>
+      <div class="gcli">${ci}${x.cl ? `<span>${Math.round(x.cl.max)}°</span>` : ""}</div>
+      <div class="gico">${ico}</div>
+      ${x.fer ? `<div class="gfer">${x.marcas.find(z => z.tipo === "feriado").txt}</div>` : ""}
+      <div class="grec e-${x.rec.estado}">${x.rec.corto}</div></div>`;
+  }
+  document.getElementById("vista").innerHTML = h + "</div>";
+  document.querySelectorAll(".gdia").forEach(el => { el.onclick = () => ficha(+el.dataset.d); el.onkeydown = e => { if (e.key === "Enter") ficha(+el.dataset.d); }; });
+}
+function renderLista() {
+  let html = `<table><thead><tr><th>Día</th><th>Santoral y fechas</th><th>☀️ Sol<br><small>sale / se pone</small></th><th>🌙 Luna</th><th class="cli">Clima</th>
+    <th>${CULTIVOS[cultivo].nombre} · ${ACTIVIDADES[actividad].toLowerCase()}</th><th class="sat">🛰️ Satélites</th></tr></thead><tbody>`;
+  for (const x of diasMes) {
+    const cl = x.cl, fz = x.fz;
+    html += `<tr class="${x.dom ? "dom" : ""} ${x.fer ? "fer" : ""} ${x.hoy ? "hoy" : ""}" data-d="${x.d}">
+      <td class="num">${x.d}<div class="dsem">${fmt(x.f, { weekday: "short" }).replace(".", "")}</div></td>
+      <td class="santo">${x.santo}${x.marcas.map(marcaHTML).join("")}</td>
       <td class="sol">${hora(x.sol.sunrise)}<br>${hora(x.sol.sunset)}<div class="dur">${Math.floor(x.durMin / 60)} h ${Math.round(x.durMin % 60)} min</div></td>
       <td class="lun">${lunaSVG(x.il.fraction, x.cre)}<div>${fz ? `<b>${FASES[fz.tipo][0]}</b> ${hora(fz.t)}` : `${nombreFase(x.il.fraction, x.cre)} ${Math.round(x.il.fraction * 100)} %`}</div>
         <div class="lt">↑${x.lunaT.rise ? hora(x.lunaT.rise) : " —"} ↓${x.lunaT.set ? hora(x.lunaT.set) : " —"}</div></td>
       <td class="cli">${cl ? `<span class="ci" title="${(CLIMA[cl.cod] || ["", ""])[1]}">${(CLIMA[cl.cod] || ["·"])[0]}</span>
-        <div>${Math.round(cl.max)}° / ${Math.round(cl.min)}°</div><div class="ll">${cl.lluvia >= 0.1 ? `💧 ${cl.lluvia.toFixed(cl.lluvia < 10 ? 1 : 0)} mm` : ""}${cl.prob != null ? ` <small>${cl.prob} %</small>` : ""}</div>` : ""}</td>
-      <td class="sat">${(pas[k] || []).map(p => `<div><b>${p.s.nombre}</b> ${hora(p.t)}</div>`).join("")}</td></tr>`;
+        <div>${Math.round(cl.max)}° / ${Math.round(cl.min)}°</div><div class="ll">${cl.lluvia >= 0.1 ? `💧 ${cl.lluvia.toFixed(cl.lluvia < 10 ? 1 : 0)} mm` : ""}</div>` : ""}</td>
+      <td><span class="chip e-${x.rec.estado}">${x.rec.corto}</span>${x.rec.certeza ? `<div class="cert">Certeza ${NIV[x.rec.certeza.n].toLowerCase()}</div>` : ""}</td>
+      <td class="sat">${x.pas.map(p => `<div><b>${p.s.nombre}</b> ${hora(p.t)}</div>`).join("")}</td></tr>`;
   }
-  cont.innerHTML = html;
-  const fueraOrb = diaBo(anio, mes, 1, 0) > Date.now() + MAX_DIAS_ORBITA * 86400000 || diaBo(anio, mes + 1, 1, 0) < Date.now() - MAX_DIAS_ORBITA * 86400000;
-  document.getElementById("notaSat").textContent = !orbitasListas ? "Satélites: no se pudieron cargar las órbitas." :
-    fueraOrb ? `Satélites: se muestran solo hasta ${MAX_DIAS_ORBITA} días antes o después de hoy (más allá, el cálculo pierde precisión).` : "";
-  renderHoy();
+  document.getElementById("vista").innerHTML = html + "</tbody></table>";
+  document.querySelectorAll("#vista tr[data-d]").forEach(el => el.onclick = () => ficha(+el.dataset.d));
+}
+// ---- Ficha completa de un día -----------------------------------------------------
+function ficha(d) {
+  const x = diasMes[d - 1], cl = x.cl, R = x.rec, C = CULTIVOS[cultivo];
+  const certeza = R.certeza ? `<span class="nivel n${R.certeza.n}">Certeza ${NIV[R.certeza.n].toLowerCase()}</span> <small>${R.certeza.txt}</small>` : "";
+  const otras = Object.keys(ACTIVIDADES).filter(a => a !== actividad).map(a => {
+    const o = recomendar(cultivo, a, x.iso, clima, hoyISO(), { cre: x.cre, frac: x.il.fraction });
+    return `<div class="otra"><b>${ACTIVIDADES[a]}:</b> <span class="chip e-${o.estado}">${o.corto}</span> ${o.titulo}</div>`; }).join("");
+  document.getElementById("fichaCont").innerHTML = `
+    <div class="fcab"><div><div class="hd">${fmt(x.f, { weekday: "long" })}</div><div class="fn">${d} de ${NOMBRE_MES[mes].toLowerCase()} de ${anio}</div></div>
+      <button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">✕</button></div>
+    <div class="hsanto">${x.santo}</div>${x.marcas.map(marcaHTML).join("")}
+    <div class="rec e-${R.estado}">
+      <div class="rtit">${C.nombre} · ${ACTIVIDADES[actividad].toLowerCase()}</div>
+      <div class="rest">${R.titulo}</div>
+      <div class="rcert">${certeza}</div>
+      <ul>${R.razones.map(z => `<li class="${z.nota ? "nota" : ""}">${z.t} <small>(${z.f})</small></li>`).join("")}</ul>
+      ${R.tradicion ? `<div class="trad">🌙 <b>Tradición popular</b> <span class="nivel ntrad">sin respaldo científico</span><br>${R.tradicion.txt}</div>` : ""}
+      ${otras ? `<div class="otras">${otras}</div>` : ""}
+    </div>
+    <div class="fbloque"><b>☀️ Sol</b> sale ${hora(x.sol.sunrise)} · se pone ${hora(x.sol.sunset)} · ${Math.floor(x.durMin / 60)} h ${Math.round(x.durMin % 60)} min de luz</div>
+    <div class="fbloque"><b>🌙 Luna</b> ${lunaSVG(x.il.fraction, x.cre, 18)} ${x.fz ? `<b>${FASES[x.fz.tipo][0]}</b> a las ${hora(x.fz.t)}` : nombreFase(x.il.fraction, x.cre)},
+      iluminada ${Math.round(x.il.fraction * 100)} % · sale ${x.lunaT.rise ? hora(x.lunaT.rise) : "—"} · se pone ${x.lunaT.set ? hora(x.lunaT.set) : "—"}</div>
+    <div class="fbloque"><b>🌦️ Clima</b> ${cl ? `${(CLIMA[cl.cod] || ["", ""])[0]} ${(CLIMA[cl.cod] || ["", "—"])[1]} · máx. ${Math.round(cl.max)}° · mín. ${Math.round(cl.min)}°
+      · lluvia ${cl.lluvia.toFixed(1)} mm${cl.prob != null ? ` (prob. ${cl.prob} %)` : ""} · viento ${Math.round(cl.viento)} km/h
+      ${cl.et0 != null ? `· evaporación ${cl.et0.toFixed(1)} mm` : ""}${cl.suelo != null ? ` · humedad del suelo ${(cl.suelo * 100).toFixed(0)} %` : ""}` :
+      "Sin datos: hay datos del último mes y pronóstico de los próximos 16 días."}</div>
+    <div class="fbloque"><b>🛰️ Satélites</b> ${x.pas.length ? x.pas.map(p => `${p.s.nombre} a las ${hora(p.t)}`).join(" · ") : "Ninguna pasada de Landsat o Sentinel-2 sobre el lugar."}</div>`;
+  document.getElementById("ficha").classList.add("on");
+}
+function cerrarFicha() { document.getElementById("ficha").classList.remove("on"); }
+// ---- ¿Hay humedad para sembrar? ------------------------------------------------------
+function renderHumedad() {
+  const el = document.getElementById("humedad"), h = hoyISO(), c = clima[h];
+  if (!c) { el.innerHTML = "<b>¿Hay humedad para sembrar?</b> Cargando datos de lluvia…"; return; }
+  const l7 = suma(clima, h, -6, 0, "lluvia").s, l30 = suma(clima, h, -29, 0, "lluvia").s, p7 = suma(clima, h, 1, 7, "lluvia").s;
+  let prox = null; for (let i = 1; i <= 15; i++) { const z = clima[isoMas(h, i)]; if (z && z.lluvia >= 5) { prox = { i, mm: z.lluvia }; break; } }
+  const s = c.suelo, est = s == null ? null : s < 0.15 ? ["seco", "e-no"] : s < 0.22 ? ["con poca humedad", "e-posible"] : s < 0.38 ? ["húmedo", "e-bien"] : ["muy húmedo o encharcado", "e-ligero"];
+  el.innerHTML = `<b>¿Hay humedad para sembrar? · ${lugar.nombre}</b>
+    <div class="hum">${est ? `<span class="chip ${est[1]}">Suelo ${est[0]}</span> <small>(${(s * 100).toFixed(0)} % de agua entre 9 y 27 cm)</small>` : ""}
+    <span>Lluvia: últimos 7 días <b>${l7.toFixed(0)} mm</b> · últimos 30 días <b>${l30.toFixed(0)} mm</b> · próximos 7 días <b>${p7.toFixed(0)} mm</b></span>
+    <span>${prox ? `Próxima lluvia de importancia: <b>${prox.i === 1 ? "mañana" : `en ${prox.i} días`}</b> (${prox.mm.toFixed(0)} mm)` : "Sin lluvias importantes en los próximos 15 días"}</span></div>`;
 }
 function renderHoy() {
   const n = new Date(), a = +fmt(n, { year: "numeric" }), m = +fmt(n, { month: "numeric" }) - 1, d = +fmt(n, { day: "numeric" });
@@ -281,7 +362,13 @@ async function actualizar() { await cargarClima(); render(); }
 document.getElementById("ant").onclick = () => { mes--; if (mes < 0) { mes = 11; anio--; } render(); };
 document.getElementById("sig").onclick = () => { mes++; if (mes > 11) { mes = 0; anio++; } render(); };
 document.getElementById("hoyBtn").onclick = () => { anio = +fmt(new Date(), { year: "numeric" }); mes = +fmt(new Date(), { month: "numeric" }) - 1; render();
-  document.querySelector("tr.hoy")?.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  document.querySelector(".hoy[data-d]")?.scrollIntoView({ behavior: "smooth", block: "center" }); };
 document.getElementById("lugar").onchange = e => { lugar = LUGARES[e.target.value]; document.getElementById("lugarTxt").textContent = lugar.nombre; actualizar(); };
 document.getElementById("imprimir").onclick = () => window.print();
+document.getElementById("cultivo").onchange = e => { cultivo = e.target.value; render(); };
+document.getElementById("actividad").onchange = e => { actividad = e.target.value; render(); };
+document.getElementById("vCal").onclick = () => { vista = "cal"; render(); };
+document.getElementById("vLista").onclick = () => { vista = "lista"; render(); };
+document.getElementById("ficha").onclick = e => { if (e.target.id === "ficha") cerrarFicha(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarFicha(); });
 (async () => { render(); await Promise.all([cargarClima(), cargarOrbitas()]); render(); })();
