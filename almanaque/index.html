@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Almanaque del Valle de Tucabaca · Movimiento en Defensa del Valle de Tucabaca</title>
+<meta name="description" content="Fases de la luna, salida y puesta del sol, santoral, feriados, fechas ambientales, clima y pasadas de satélites para Roboré y el Valle de Tucabaca.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Movimiento en Defensa del Valle de Tucabaca">
+<meta property="og:title" content="Almanaque del Valle de Tucabaca">
+<meta property="og:description" content="Luna, sol, santoral, feriados, fechas ambientales, clima y satélites para Roboré y el Valle de Tucabaca.">
+<meta property="og:url" content="https://esantibanez.github.io/mapas-tucabaca/almanaque/">
+<meta property="og:image" content="https://esantibanez.github.io/mapas-tucabaca/almanaque/vista_previa.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root { --verde:#1F3A2D; --dorado:#B8923A; --crema:#F7F1E1; --papel:#FFFDF7; --tinta:#2a2a26; --gris:#6b675c; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--crema); color:var(--tinta); font:15px/1.4 Georgia, "Times New Roman", serif; }
+  header { background:var(--verde); color:#fff; text-align:center; padding:16px 12px 12px; border-bottom:4px double var(--dorado); }
+  header img { width:66px; background:#fff; border-radius:50%; padding:5px; border:2px solid var(--dorado); }
+  header h1 { margin:6px 0 2px; font-size:30px; font-weight:normal; letter-spacing:1px; font-variant:small-caps; }
+  header .sub { color:#ddd3b7; font-size:14px; font-style:italic; }
+  main { max-width:1080px; margin:0 auto; padding:14px; }
+  #hoy { display:flex; gap:16px; background:var(--papel); border:1px solid #d9cfb2; border-radius:6px; padding:14px; margin-bottom:14px; }
+  .hfecha { text-align:center; min-width:120px; border-right:1px solid #e3d9bd; padding-right:14px; }
+  .hd { text-transform:capitalize; color:var(--dorado); font-size:16px; } .hn { font-size:60px; line-height:1; color:var(--verde); } .hm { font-size:15px; }
+  .hsanto { font-size:19px; color:var(--verde); font-style:italic; margin-bottom:4px; }
+  .hfila { margin:5px 0; font-size:14.5px; } .hfila svg { vertical-align:middle; }
+  .barra { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0; }
+  .barra h2 { margin:0 8px; font-size:26px; font-weight:normal; color:var(--verde); font-variant:small-caps; min-width:210px; text-align:center; }
+  button, select { font:14px Georgia, serif; border:1px solid var(--verde); background:#fff; color:var(--verde); padding:5px 10px; border-radius:5px; cursor:pointer; }
+  button:hover { background:var(--verde); color:#fff; }
+  .derecha { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  #fases { display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 12px; }
+  .fase { display:flex; gap:8px; align-items:center; background:var(--papel); border:1px solid #e0d6b9; border-radius:6px; padding:6px 10px; font-size:13.5px; }
+  .fase.est { border-color:var(--dorado); } .fase .ico { font-size:24px; }
+  table { width:100%; border-collapse:collapse; background:var(--papel); border:1px solid #d9cfb2; }
+  th { background:var(--verde); color:#fff; font-weight:normal; font-size:13px; padding:7px 6px; text-align:left; letter-spacing:.3px; }
+  td { border-bottom:1px solid #ece4cd; padding:6px; vertical-align:top; font-size:13.5px; }
+  td.num { width:50px; text-align:center; font-size:22px; color:var(--verde); } .dsem { font-size:11.5px; color:var(--gris); text-transform:capitalize; }
+  tr.dom td.num { color:var(--dorado); font-weight:bold; }
+  tr.fer td { background:#FBF3DC; } tr.fer td.num { font-weight:bold; }
+  tr.hoy td { background:#EAF2E4 !important; } tr.hoy td.num { box-shadow:inset 4px 0 var(--verde); }
+  td.santo { font-style:italic; min-width:200px; }
+  .m { font-style:normal; font-size:12.5px; margin-top:2px; }
+  .m.feriado { color:var(--verde); font-weight:bold; } .m.departamental { color:var(--verde); }
+  .m.ambiental { color:#3C7A3F; } .m.religiosa { color:#6b4d1c; } .m.civica { color:var(--gris); }
+  td.sol { white-space:nowrap; width:78px; } .dur { font-size:11px; color:var(--gris); }
+  td.lun { width:150px; font-size:12.5px; } td.lun svg { float:left; margin:1px 6px 0 0; } .lt { color:var(--gris); font-size:11.5px; clear:both; }
+  td.cli { width:110px; font-size:12.5px; } .ci { font-size:20px; } .ll { color:#2a6f97; }
+  td.sat { width:150px; font-size:12px; color:#1b4f72; }
+  .nota { font-size:12.5px; color:var(--gris); margin:6px 0; }
+  .metodo { font-size:13px; background:var(--papel); border:1px solid #e0d6b9; border-radius:6px; padding:10px 14px; margin-top:14px; }
+  .metodo h4 { margin:0 0 4px; color:var(--verde); font-variant:small-caps; font-size:16px; }
+  footer { text-align:center; font-size:12.5px; color:var(--gris); padding:16px; }
+  footer b { color:var(--verde); }
+  footer a, .metodo a { color:var(--verde); }
+  @media (max-width:720px) {
+    header h1 { font-size:23px; }
+    #hoy { flex-direction:column; } .hfecha { border-right:0; border-bottom:1px solid #e3d9bd; padding:0 0 8px; }
+    th.cli, td.cli { display:none; }
+    td.santo { min-width:0; } td.sat, th.sat { display:none; }
+    td.lun { width:auto; } .barra h2 { font-size:22px; min-width:0; }
+  }
+  @media print {
+    header { background:none; color:#000; border-bottom:2px solid #000; padding:4px; } header img { width:44px; } header .sub { color:#333; }
+    #hoy, .barra button, .barra select, .derecha, .metodo, #notaSat:empty { display:none; }
+    body { background:#fff; font-size:11px; } main { padding:0; max-width:none; }
+    th { background:#eee; color:#000; } td { font-size:10.5px; padding:3px; } td.num { font-size:15px; }
+    tr { page-break-inside:avoid; } tr.hoy td { background:none !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Movimiento en Defensa del Valle de Tucabaca">
+  <h1>Almanaque del Valle de Tucabaca</h1>
+  <div class="sub">Luna · sol · santoral · feriados · fechas ambientales · clima · satélites — <span id="lugarTxt">Roboré</span></div>
+</header>
+<main>
+  <div id="hoy"></div>
+  <div class="barra">
+    <button id="ant" aria-label="Mes anterior">◀</button><h2 id="titMes"></h2><button id="sig" aria-label="Mes siguiente">▶</button>
+    <button id="hoyBtn">Hoy</button>
+    <div class="derecha">
+      <select id="lugar" aria-label="Lugar">
+        <option value="robore">Roboré</option><option value="santiago">Santiago de Chiquitos</option>
+        <option value="chochis">Chochís</option><option value="scz">Santa Cruz de la Sierra</option>
+      </select>
+      <button id="imprimir">🖨 Imprimir mes</button>
+    </div>
+  </div>
+  <div id="fases"></div>
+  <table>
+    <thead><tr><th>Día</th><th>Santoral y fechas</th><th>☀️ Sol<br><small>sale / se pone</small></th><th>🌙 Luna</th><th class="cli">Clima</th><th class="sat">🛰️ Landsat / Sentinel-2</th></tr></thead>
+    <tbody id="mes"></tbody>
+  </table>
+  <div class="nota" id="notaSat"></div>
+  <div class="metodo">
+    <h4>Sobre este almanaque</h4>
+    Horas de Bolivia. <b>Sol y luna:</b> calculados para el lugar elegido; las fases de la luna y el inicio de las estaciones, con los
+    algoritmos astronómicos de Jean Meeus (precisión de minutos). La luna se dibuja como se ve desde el hemisferio sur.
+    <b>Clima:</b> pronóstico de los próximos 16 días de <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>,
+    que se actualiza varias veces al día; los primeros días son los más confiables. <b>Feriados:</b> nacionales según el DS 2750 y los
+    traslados oficiales conocidos (DS 5521 para 2026); cada año el Gobierno puede trasladar o agregar feriados. <b>Santoral:</b> santo o fiesta principal del calendario católico.
+    <b>Satélites:</b> pasadas diurnas de Landsat 8 y 9 y Sentinel-2 sobre el lugar, calculadas con sus órbitas oficiales;
+    que pase el satélite no garantiza una imagen sin nubes. Más detalle en <a href="../satelites/">¿Cuándo pasa el satélite?</a>
+  </div>
+</main>
+<footer><b>Elaborado por: Movimiento en Defensa del Valle de Tucabaca</b><br>
+Fuentes: algoritmos de J. Meeus · SunCalc · Open-Meteo · NORAD/CelesTrak · Decretos Supremos 2750 y 5521<br><span class="nav">Más herramientas del movimiento: <a href="../">Mapa de deforestación 2026</a> · <a href="../satelites/">¿Cuándo pasa el satélite?</a> · <a href="../almanaque/">Almanaque del Valle</a></span></footer>
+<script src="lib/suncalc.js"></script>
+<script src="../satelites/lib/satellite.min.js"></script>
+<script src="santoral.js"></script>
+<script src="almanaque.js"></script>
+<script data-goatcounter="https://tucabaca.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

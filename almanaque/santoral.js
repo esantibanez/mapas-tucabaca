@@ -1,0 +1,88 @@
+/* Santoral: santo o fiesta principal de cada día según el calendario católico (fiestas fijas).
+   Las fiestas móviles (Semana Santa, Pentecostés, Corpus Christi…) se calculan en almanaque.js. */
+const SANTORAL = [
+  // Enero
+  ["Santa María, Madre de Dios", "Santos Basilio y Gregorio Nacianceno", "Santa Genoveva", "Santa Ángela de Foligno", "San Simeón Estilita",
+   "Epifanía del Señor (Reyes Magos)", "San Raimundo de Peñafort", "San Severino", "Santos Julián y Basilisa", "San Gonzalo de Amarante",
+   "San Higinio", "San Arcadio", "San Hilario de Poitiers", "San Félix de Nola", "San Pablo, ermitaño",
+   "San Marcelo I", "San Antonio Abad", "Santa Margarita de Hungría", "San Mario", "Santos Fabián y Sebastián",
+   "Santa Inés", "San Vicente, diácono", "San Ildefonso", "San Francisco de Sales", "Conversión de San Pablo",
+   "Santos Timoteo y Tito", "Santa Ángela Merici", "Santo Tomás de Aquino", "San Valero", "Santa Martina", "San Juan Bosco"],
+  // Febrero
+  ["Santa Brígida de Irlanda", "Presentación del Señor · Virgen de la Candelaria", "San Blas", "San Andrés Corsino", "Santa Águeda",
+   "San Pablo Miki y compañeros", "San Ricardo", "Santa Josefina Bakhita", "Santa Apolonia", "Santa Escolástica",
+   "Nuestra Señora de Lourdes", "Santa Eulalia de Barcelona", "Santa Catalina de Ricci", "Santos Cirilo y Metodio (San Valentín)", "San Claudio de la Colombière",
+   "Santa Juliana", "Siete Santos Fundadores", "Santa Bernardita (Francia)", "San Álvaro de Córdoba", "Santos Francisco y Jacinta Marto",
+   "San Pedro Damián", "Cátedra de San Pedro", "San Policarpo", "San Modesto", "San Néstor",
+   "San Alejandro de Alejandría", "San Gabriel de la Dolorosa", "San Román", "San Osvaldo"],
+  // Marzo
+  ["San Rosendo", "Santa Inés de Praga", "Santos Emeterio y Celedonio", "San Casimiro", "San Juan José de la Cruz",
+   "Santa Coleta", "Santas Perpetua y Felicidad", "San Juan de Dios", "Santa Francisca Romana", "Cuarenta Mártires de Sebaste",
+   "San Eulogio de Córdoba", "San Maximiliano", "San Rodrigo", "Santa Matilde", "Santa Luisa de Marillac",
+   "San Heriberto", "San Patricio", "San Cirilo de Jerusalén", "San José, esposo de la Virgen María", "San Martín de Dumio",
+   "San Nicolás de Flüe", "Santa Lea", "Santo Toribio de Mogrovejo", "Santa Catalina de Suecia", "Anunciación del Señor",
+   "San Braulio", "San Ruperto", "San Sixto III", "San Eustasio", "San Juan Clímaco", "San Benjamín"],
+  // Abril
+  ["San Hugo de Grenoble", "San Francisco de Paula", "San Ricardo de Chichester", "San Isidoro de Sevilla", "San Vicente Ferrer",
+   "San Celestino I", "San Juan Bautista de La Salle", "Santa Julia Billiart", "Santa Casilda", "San Ezequiel, profeta",
+   "San Estanislao", "San Julio I", "San Martín I", "San Pedro González Telmo", "Santas Basilisa y Anastasia",
+   "Santa Bernardita", "San Aniceto", "San Galdino", "San León IX", "Santa Inés de Montepulciano",
+   "San Anselmo", "Santos Sotero y Cayo", "San Jorge", "San Fidel de Sigmaringa", "San Marcos, evangelista",
+   "San Cleto", "Santa Zita", "San Pedro Chanel", "Santa Catalina de Siena", "San Pío V"],
+  // Mayo
+  ["San José Obrero", "San Atanasio", "Santos Felipe y Santiago, apóstoles · Fiesta de la Cruz", "San Florián", "San Ángel de Sicilia",
+   "Santo Domingo Savio", "Santa Rosa Venerini", "San Víctor", "San Gregorio Ostiense", "San Juan de Ávila",
+   "San Anastasio", "Santos Nereo y Aquiles", "Nuestra Señora de Fátima", "San Matías, apóstol", "San Isidro Labrador",
+   "San Juan Nepomuceno", "San Pascual Bailón", "San Juan I", "San Pedro Celestino", "San Bernardino de Siena",
+   "San Cristóbal Magallanes y compañeros", "Santa Rita de Casia", "San Desiderio", "María Auxiliadora", "San Beda",
+   "San Felipe Neri", "San Agustín de Canterbury", "San Germán de París", "San Pablo VI", "San Fernando", "Visitación de la Virgen María"],
+  // Junio
+  ["San Justino", "Santos Marcelino y Pedro", "San Carlos Lwanga y compañeros", "San Francisco Caracciolo", "San Bonifacio",
+   "San Norberto", "San Roberto", "San Medardo", "San Efrén", "Santa Olivia",
+   "San Bernabé, apóstol", "San Juan de Sahagún", "San Antonio de Padua", "San Eliseo, profeta", "San Vito",
+   "San Juan Francisco Regis", "San Ismael", "Santa Marina", "San Romualdo", "San Silverio",
+   "San Luis Gonzaga", "Santos Juan Fisher y Tomás Moro", "Santa Agripina", "Natividad de San Juan Bautista", "San Guillermo",
+   "San Pelayo", "San Cirilo de Alejandría", "San Ireneo", "Santos Pedro y Pablo, apóstoles", "Primeros Mártires de Roma"],
+  // Julio
+  ["San Junípero Serra", "Santos Proceso y Martiniano", "Santo Tomás, apóstol", "Santa Isabel de Portugal", "San Antonio María Zaccaría",
+   "Santa María Goretti", "San Fermín", "Santos Áquila y Priscila", "Santa Verónica Giuliani", "San Cristóbal",
+   "San Benito, abad", "San Juan Gualberto", "San Enrique", "San Camilo de Lelis", "San Buenaventura",
+   "Nuestra Señora del Carmen", "San Alejo", "San Federico", "San Arsenio", "San Elías, profeta",
+   "San Lorenzo de Brindis", "Santa María Magdalena", "Santa Brígida de Suecia", "San Charbel", "Santiago, apóstol",
+   "Santos Joaquín y Ana", "San Pantaleón", "Santos Nazario y Celso", "Santa Marta", "San Pedro Crisólogo", "San Ignacio de Loyola"],
+  // Agosto
+  ["San Alfonso María de Ligorio", "San Eusebio de Vercelli", "Santa Lidia", "San Juan María Vianney", "Nuestra Señora de las Nieves",
+   "Transfiguración del Señor", "San Cayetano", "Santo Domingo de Guzmán", "Santa Teresa Benedicta de la Cruz", "San Lorenzo, diácono",
+   "Santa Clara de Asís", "Santa Juana Francisca de Chantal", "Santos Ponciano e Hipólito", "San Maximiliano Kolbe", "Asunción de la Virgen María",
+   "San Roque", "San Jacinto", "Santa Elena", "San Juan Eudes", "San Bernardo",
+   "San Pío X", "Santa María Reina", "San Felipe Benicio", "San Bartolomé, apóstol", "San Luis de Francia",
+   "San Ceferino", "Santa Mónica", "San Agustín", "Martirio de San Juan Bautista", "Santa Rosa de Lima", "San Ramón Nonato"],
+  // Septiembre
+  ["San Gil", "San Antolín", "San Gregorio Magno", "Santa Rosalía", "Santa Teresa de Calcuta",
+   "San Zacarías, profeta", "Santa Regina", "Natividad de la Virgen María", "San Pedro Claver", "San Nicolás de Tolentino",
+   "Santos Proto y Jacinto", "Santísimo Nombre de María", "San Juan Crisóstomo", "Exaltación de la Santa Cruz", "Nuestra Señora de los Dolores",
+   "Santos Cornelio y Cipriano", "San Roberto Belarmino", "San José de Cupertino", "San Jenaro", "San Andrés Kim y compañeros",
+   "San Mateo, apóstol", "Santo Tomás de Villanueva", "San Pío de Pietrelcina", "Nuestra Señora de la Merced", "San Cleofás",
+   "Santos Cosme y Damián", "San Vicente de Paúl", "San Wenceslao", "Santos Miguel, Gabriel y Rafael, arcángeles", "San Jerónimo"],
+  // Octubre
+  ["Santa Teresa del Niño Jesús", "Santos Ángeles Custodios", "San Francisco de Borja", "San Francisco de Asís", "Santa Faustina Kowalska",
+   "San Bruno", "Nuestra Señora del Rosario", "Santa Pelagia", "San Dionisio", "San Daniel Comboni",
+   "San Juan XXIII", "Nuestra Señora del Pilar", "San Eduardo", "San Calixto I", "Santa Teresa de Jesús",
+   "Santa Eduviges", "San Ignacio de Antioquía", "San Lucas, evangelista", "San Pedro de Alcántara", "Santa Irene",
+   "Santa Úrsula", "San Juan Pablo II", "San Juan de Capistrano", "San Antonio María Claret", "Santos Crisanto y Daría",
+   "San Evaristo", "San Frumencio", "Santos Simón y Judas, apóstoles", "San Narciso", "San Alonso Rodríguez", "San Quintín"],
+  // Noviembre
+  ["Todos los Santos", "Fieles Difuntos", "San Martín de Porres", "San Carlos Borromeo", "Santos Zacarías e Isabel",
+   "San Leonardo", "San Ernesto", "San Godofredo", "Dedicación de la Basílica de Letrán", "San León Magno",
+   "San Martín de Tours", "San Josafat", "San Diego de Alcalá", "San Serapio", "San Alberto Magno",
+   "Santa Margarita de Escocia", "Santa Isabel de Hungría", "Dedicación de las basílicas de San Pedro y San Pablo", "San Abdías, profeta", "San Félix de Valois",
+   "Presentación de la Virgen María", "Santa Cecilia", "San Clemente I", "San Andrés Dung-Lac y compañeros", "Santa Catalina de Alejandría",
+   "San Leonardo de Porto Maurizio", "Virgen de la Medalla Milagrosa", "San Jaime de la Marca", "San Saturnino", "San Andrés, apóstol"],
+  // Diciembre
+  ["San Eloy", "Santa Bibiana", "San Francisco Javier", "Santa Bárbara", "San Sabas",
+   "San Nicolás de Bari", "San Ambrosio", "Inmaculada Concepción", "San Juan Diego", "Santa Eulalia de Mérida",
+   "San Dámaso I", "Nuestra Señora de Guadalupe", "Santa Lucía", "San Juan de la Cruz", "Santa Cristiana",
+   "Santa Adelaida", "San Lázaro", "Nuestra Señora de la Esperanza", "San Urbano V", "Santo Domingo de Silos",
+   "San Pedro Canisio", "Santa Francisca Javier Cabrini", "San Juan de Kenty", "Nochebuena · Santa Adela", "Natividad del Señor",
+   "San Esteban, protomártir", "San Juan, apóstol y evangelista", "Santos Inocentes", "Santo Tomás Becket", "San Sabino", "San Silvestre I"],
+];
