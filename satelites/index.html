@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Cuándo pasa el satélite? · Movimiento en Defensa del Valle de Tucabaca</title>
+<meta name="description" content="Última y próxima pasada de Landsat, Sentinel, MODIS y VIIRS sobre cualquier punto: los satélites que vigilan la deforestación, los incendios y el agua.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Movimiento en Defensa del Valle de Tucabaca">
+<meta property="og:title" content="¿Cuándo pasa el satélite? · Movimiento en Defensa del Valle de Tucabaca">
+<meta property="og:description" content="Última y próxima pasada de Landsat, Sentinel, MODIS y VIIRS sobre cualquier punto: los satélites que vigilan la deforestación, los incendios y el agua.">
+<meta property="og:url" content="https://esantibanez.github.io/mapas-tucabaca/satelites/">
+<meta property="og:image" content="https://esantibanez.github.io/mapas-tucabaca/satelites/vista_previa.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="lib/leaflet.css">
+<style>
+  :root { --verde:#1F3A2D; --dorado:#C9A44C; --crema:#F6F1E3; --gris:#5b5b5b; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 "Segoe UI", Roboto, Arial, sans-serif; color:#222; background:var(--crema); }
+  header { background:var(--verde); color:#fff; padding:14px 18px; display:flex; gap:14px; align-items:center; }
+  header img { width:62px; background:#fff; border-radius:50%; padding:5px; border:2px solid var(--dorado); }
+  header h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:.2px; }
+  header .sub { color:#d9d2bd; font-size:13.5px; }
+  main { max-width:1200px; margin:0 auto; padding:14px; }
+  .barra { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .barra .lugar { font-weight:600; color:var(--verde); margin-right:auto; }
+  button { font:inherit; font-size:13.5px; border:1px solid var(--verde); background:#fff; color:var(--verde); padding:6px 11px; border-radius:6px; cursor:pointer; }
+  button:hover { background:var(--verde); color:#fff; }
+  #mapa { height:420px; border-radius:8px; border:1px solid #cfc6ad; }
+  .ayuda { color:var(--gris); font-size:13px; margin:6px 0 12px; }
+  #resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; margin:12px 0; }
+  .tarjeta { background:#fff; border-left:4px solid var(--dorado); border-radius:6px; padding:10px 12px; font-size:14px; }
+  .tarjeta .tt { font-weight:600; color:var(--verde); margin-bottom:4px; }
+  small { color:var(--gris); }
+  .caja { background:#fff; border-radius:8px; padding:4px 0; overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; }
+  #tabla th { text-align:left; font-size:12.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--gris); padding:8px 10px; border-bottom:2px solid #e5dfcf; }
+  #tabla td { padding:8px 10px; border-bottom:1px solid #eee7d6; vertical-align:top; font-size:14px; }
+  #tabla tr[data-id]:not(.sin) { cursor:pointer; }
+  #tabla tr[data-id]:not(.sin):hover, tr.sel { background:#f3efe2; }
+  tr.grupo td { background:#ece6d4; font-size:12.5px !important; font-weight:600; color:var(--verde); padding:5px 10px !important; }
+  tr.sin td { color:#999; }
+  td.uso { color:var(--gris); font-size:13px !important; max-width:300px; }
+  td.prox { font-weight:600; }
+  .pt { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:7px; }
+  #detalle { margin-top:12px; }
+  #detalle h3 { margin:6px 0; color:var(--verde); }
+  .det { font-size:14px; color:#333; margin:4px 0 8px; }
+  table.pasadas td { padding:5px 8px; border-bottom:1px solid #eee; font-size:13.5px; cursor:pointer; }
+  table.pasadas th { text-align:left; font-size:12px; color:var(--gris); padding:5px 8px; }
+  table.pasadas tr.fut td { font-weight:600; }
+  table.pasadas tr:hover td { background:#f3efe2; }
+  .nota { font-size:12.5px; color:var(--gris); }
+  #progreso { display:none; background:#fff; border-radius:6px; padding:8px; margin:8px 0; }
+  #progreso div { height:6px; background:var(--dorado); width:0; border-radius:3px; transition:width .2s; }
+  #progreso span { font-size:12.5px; color:var(--gris); }
+  .metodo { font-size:13px; color:#444; background:#fff; border-radius:8px; padding:12px 16px; margin-top:14px; }
+  .metodo h4 { margin:0 0 6px; color:var(--verde); }
+  footer { text-align:center; font-size:12.5px; color:var(--gris); padding:18px; }
+  footer b { color:var(--verde); }
+  @media (max-width:700px) {
+    header h1 { font-size:18px; } header img { width:50px; }
+    #mapa { height:320px; }
+    td.uso, th.uso { display:none; }
+    #tabla td { font-size:13.5px; padding:7px 6px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Movimiento en Defensa del Valle de Tucabaca">
+  <div><h1>¿Cuándo pasa el satélite?</h1>
+  <div class="sub">Satélites que vigilan la deforestación, los incendios y el agua · última y próxima pasada sobre un punto</div></div>
+</header>
+<main>
+  <div class="barra">
+    <span class="lugar">📍 <span id="coord"></span></span>
+    <button data-lugar="-18.329,-59.760">Roboré</button>
+    <button data-lugar="-18.339,-59.598">Santiago de Chiquitos</button>
+    <button data-lugar="-18.120,-60.030">Chochís</button>
+    <button id="btnCoord">Coordenadas…</button>
+    <button id="btnUbic">Mi ubicación</button>
+  </div>
+  <div id="mapa"></div>
+  <div class="ayuda">Toque el mapa o arrastre el marcador para elegir otro lugar. Elija un satélite en la tabla para ver por dónde pasa y qué franja cubre.</div>
+  <div id="progreso"><div></div><span></span></div>
+  <div id="resumen"></div>
+  <div class="caja">
+    <table id="tabla"><thead><tr><th>Satélite</th><th class="uso">Para qué sirve</th><th>Última pasada</th><th>Próxima pasada</th><th>Frecuencia</th></tr></thead>
+    <tbody id="cuerpo"></tbody></table>
+  </div>
+  <div id="detalle"></div>
+  <div class="metodo">
+    <h4>Cómo leer estos datos</h4>
+    Las pasadas se calculan con las órbitas oficiales publicadas por NORAD a través de CelesTrak, que se actualizan todos los días.
+    La hora tiene un margen de pocos minutos y la franja de pocos kilómetros. Se cuenta una pasada cuando el punto queda dentro de la franja que
+    fotografía el satélite. Que el satélite pase no garantiza una imagen útil: las <b>nubes</b> y el <b>humo</b> pueden tapar el suelo
+    (el radar de Sentinel-1 sí ve a través), y algunos satélites no toman imágenes en todas sus pasadas.
+    Landsat y Sentinel-2 solo fotografían de día. Los focos de calor de MODIS y VIIRS se publican en NASA FIRMS unas 3 horas después de cada pasada.
+    Horas en la zona horaria de su dispositivo.<br>
+    <span id="orbitas"></span>
+  </div>
+</main>
+<footer><b>Elaborado por: Movimiento en Defensa del Valle de Tucabaca</b><br>
+Fuentes: órbitas NORAD/CelesTrak · cálculo SGP4 (satellite.js) · NASA, USGS, ESA/Copernicus · imágenes de fondo © Esri</footer>
+<script src="lib/leaflet.js"></script>
+<script src="lib/satellite.min.js"></script>
+<script src="app.js"></script>
+<script data-goatcounter="https://tucabaca.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
